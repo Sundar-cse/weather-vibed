@@ -1,0 +1,91 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Teller - Sundar</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Animated background -->
+    <div class="background">
+        <div class="sun"></div>
+
+        <div class="cloud cloud1"></div>
+        <div class="cloud cloud2"></div>
+
+        <div class="rain rain1"></div>
+        <div class="rain rain2"></div>
+        <div class="rain rain3"></div>
+        <div class="rain rain4"></div>
+        <div class="rain rain5"></div>
+        <div class="rain rain6"></div>
+        <div class="rain rain7"></div>
+        <div class="rain rain8"></div>
+    </div>
+
+    <div class="container">
+
+        <h1>🌤️ Weather Teller</h1>
+        <p class="subtitle">Check the weather anywhere</p>
+
+        <div class="search-box">
+            <input type="text" id="cityInput" placeholder="Enter city name">
+            <button id="searchBtn">Search</button>
+        </div>
+
+        <div class="weather-card">
+
+            <h2 id="cityName">City</h2>
+
+            <div id="weatherIcon">🌤️</div>
+
+            <p id="temperature">--°C</p>
+
+            <p id="description">Weather description</p>
+
+            <div class="details">
+
+                <div class="detail">
+                    <span>🤒</span>
+                    <p>Feels like</p>
+                    <strong id="feelsLike">--°C</strong>
+                </div>
+
+                <div class="detail">
+                    <span>💧</span>
+                    <p>Humidity</p>
+                    <strong id="humidity">--%</strong>
+                </div>
+
+                <div class="detail">
+                    <span>💨</span>
+                    <p>Wind</p>
+                    <strong id="wind">-- km/h</strong>
+                </div>
+
+                <div class="detail">
+                    <span>🌧️</span>
+                    <p>Rain</p>
+                    <strong id="rain">-- mm</strong>
+                </div>
+
+            </div>
+
+        </div>
+
+        <h2 class="forecast-title">7-Day Forecast</h2>
+
+        <div id="forecast" class="forecast"></div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
+
+
