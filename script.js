@@ -39,8 +39,7 @@ function resetCard() {
   forecastEl.innerHTML = "";
 }
 
-/* ---------- Core logic ---------- */
-// Simple debounce (300 ms) – prevents rapid successive calls
+/* ---------- Debounce (optional live‑search) ---------- */
 function debounce(fn, delay) {
   let timer;
   return function (...args) {
@@ -49,7 +48,7 @@ function debounce(fn, delay) {
   };
 }
 
-// Convert weather code → emoji + description (same as before, kept for clarity)
+/* ---------- Weather code → emoji/description ---------- */
 function getWeatherInfo(code) {
   if (code === 0) return { description: "Clear sky", icon: "☀️" };
   if (code === 1 || code === 2) return { description: "Partly cloudy", icon: "🌤️" };
@@ -62,55 +61,51 @@ function getWeatherInfo(code) {
   return { description: "Unknown weather", icon: "🌤️" };
 }
 
-// Change the animated gradient background according to weather code
-/**
- * Update the gradient background **and** toggle the
- * weather‑specific CSS classes that show/hide sun/cloud/rain.
- */
+/* ---------- Background gradient + show/hide layers ---------- */
 function changeBackground(code) {
-    const bg = document.querySelector(".background");
+  const bg = document.querySelector(".background");
+  if (!bg) return; // safety guard
 
-    // ----- 1️⃣ Gradient (unchanged from your original) -----
-    if (code === 0) {
-        bg.style.background = "linear-gradient(135deg, #56ccf2, #f2c94c)";
-    } else if (code <= 3) {
-        bg.style.background = "linear-gradient(135deg, #78909c, #b0bec5)";
-    } else if (code >= 51 && code <= 67) {
-        bg.style.background = "linear-gradient(135deg, #314755, #26a0da)";
-    } else if (code >= 80 && code <= 82) {
-        bg.style.background = "linear-gradient(135deg, #3a6073, #16222a)";
-    } else if (code >= 95) {
-        bg.style.background = "linear-gradient(135deg, #141e30, #243b55)";
-    } else {
-        bg.style.background = "linear-gradient(135deg, #4facfe, #00f2fe)";
-    }
+  // ----- Gradient (same as your original) -----
+  if (code === 0) {
+    bg.style.background = "linear-gradient(135deg, #56ccf2, #f2c94c)";
+  } else if (code <= 3) {
+    bg.style.background = "linear-gradient(135deg, #78909c, #b0bec5)";
+  } else if (code >= 51 && code <= 67) {
+    bg.style.background = "linear-gradient(135deg, #314755, #26a0da)";
+  } else if (code >= 80 && code <= 82) {
+    bg.style.background = "linear-gradient(135deg, #3a6073, #16222a)";
+  } else if (code >= 95) {
+    bg.style.background = "linear-gradient(135deg, #141e30, #243b55)";
+  } else {
+    bg.style.background = "linear-gradient(135deg, #4facfe, #00f2fe)";
+  }
 
-    // ----- 2️⃣ Reset all weather classes -----
-    bg.classList.remove("sunny", "cloudy", "rainy");
+  // ----- Reset weather‑specific classes -----
+  bg.classList.remove("sunny", "cloudy", "rainy");
 
-    // ----- 3️⃣ Apply the correct class based on the code -----
-    if (code === 0) {                     // clear sky
-        bg.classList.add("sunny");
-    } else if (code >= 1 && code <= 3) {  // partly cloudy / cloudy
-        bg.classList.add("cloudy");
-    } else if (code >= 51 && code <= 67) { // rain
-        bg.classList.add("rainy");
-    } else if (code >= 80 && code <= 82) { // rain showers
-        bg.classList.add("rainy");
-    } else if (code >= 95) {              // thunderstorm (still rain‑like)
-        bg.classList.add("rainy");
-    } else if (code >= 45 && code <= 48) { // fog – treat as cloudy for visuals
-        bg.classList.add("cloudy");
-    } else {
-        // fallback – show nothing special (just the gradient)
-    }
+  // ----- Apply the correct class -----
+  if (code === 0) {                     // clear sky
+    bg.classList.add("sunny");
+  } else if (code >= 1 && code <= 3) {  // partly cloudy / cloudy
+    bg.classList.add("cloudy");
+  } else if (code >= 51 && code <= 67) { // rain
+    bg.classList.add("rainy");
+  } else if (code >= 80 && code <= 82) { // rain showers
+    bg.classList.add("rainy");
+  } else if (code >= 95) {              // thunderstorm (still rain‑like)
+    bg.classList.add("rainy");
+  } else if (code >= 45 && code <= 48) { // fog → treat as cloudy for visuals
+    bg.classList.add("cloudy");
+  }
+  // else: keep gradient only (no extra icons)
 }
 
-
-// Render the 7‑day forecast cards
+/* ---------- Render 7‑day forecast cards ---------- */
 function showForecast(daily) {
-  forecastEl.innerHTML = ""; // clear previous
-  for (let i = 0; i < 7; i++) {
+  forecastEl.innerHTML = "";
+  const daysToShow = Math.min(7, daily.time.length);
+  for (let i = 0; i < daysToShow; i++) {
     const date = new Date(daily.time[i]);
     const day  = date.toLocaleDateString("en-US", { weekday: "short" });
     const weather = getWeatherInfo(daily.weather_code[i]);
@@ -130,7 +125,7 @@ function showForecast(daily) {
   }
 }
 
-// Main search routine -------------------------------------------------
+/* ---------- Main search routine ---------- */
 async function searchWeather() {
   clearError();
   setLoading(true);
@@ -138,59 +133,76 @@ async function searchWeather() {
 
   const city = cityInput.value.trim();
   if (!city) {
-    showError("Please enter a city name");
+    showError("Please enter a city/town name");
     setLoading(false);
     return;
   }
 
   try {
-    // 1️⃣ Geocode – ask for a handful of results
+    // 1️⃣ Geocode – try Open‑Meteo with India bias, then Nominatim
     const geoResp = await fetch(
       `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
         city
-      )}&count=5&language=en&format=json`
+      )}&count=5&language=en&format=json&country=IN`
     );
     const geoData = await geoResp.json();
 
-    if (!geoData.results || geoData.results.length === 0) {
-      throw new Error("No locations found");
+    let location = null;
+    if (geoData.results && geoData.results.length > 0) {
+      // Prefer an Indian result; fallback to first if none match
+      location = geoData.results.find(r => r.country_code === "IN") ||
+                 geoData.results[0];
     }
 
-    // 2️⃣ Prefer an Indian result (country_code === "IN")
-    let location = geoData.results.find(r => r.country_code === "IN");
-    if (!location) location = geoData.results[0]; // fallback
+    if (!location) {
+      // Nominatim fallback
+      const nomResp = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          city + ", India"
+        )}&limit=1`
+      );
+      const nomData = await nomResp.json();
+      if (nomData.length === 0) throw new Error("Location not found");
+      const top = nomData[0];
+      location = {
+        name: top.display_name.split(",")[0].trim(),
+        latitude: parseFloat(top.lat),
+        longitude: parseFloat(top.lon),
+        country_code: top.address.country_code?.toUpperCase() || "",
+        country: top.address.country || ""
+      };
+    }
 
-    // 3️⃣ Fetch weather data
+    // 2️⃣ Fetch weather data from Open‑Meteo
     const weatherResp = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}` +
         `&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m` +
         `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum` +
         `&timezone=auto`
     );
+    if (!weatherResp.ok) throw new Error("Weather service error");
     const weatherData = await weatherResp.json();
 
-    // 4️⃣ Populate UI
+    // 3️⃣ Populate UI
     const cur = weatherData.current;
-    cityNameEl.textContent = `${location.name}, ${location.country}`;
+    const countryName = location.country || location.country_code;
+    cityNameEl.textContent = `${location.name}, ${countryName}`;
     weatherIcon.textContent = getWeatherInfo(cur.weather_code).icon;
+    weatherIcon.setAttribute('aria-label', getWeatherInfo(cur.weather_code).description);
     tempEl.textContent = `${Math.round(cur.temperature_2m)}°C`;
     feelsLikeEl.textContent = `${Math.round(cur.apparent_temperature)}°C`;
     humidityEl.textContent = `${cur.relative_humidity_2m}%`;
     windEl.textContent = `${Math.round(cur.wind_speed_10m)} km/h`;
     rainEl.textContent = `${cur.precipitation} mm`;
 
-    // description (human‑readable)
     descEl.textContent = getWeatherInfo(cur.weather_code).description;
     descEl.style.color = "";
 
-    // background gradient
     changeBackground(cur.weather_code);
-
-    // 5‑day forecast
     showForecast(weatherData.daily);
   } catch (err) {
     console.error(err);
-    showError("Something went wrong ❌ – try another spelling or a nearby city");
+    showError("Location not found or service unavailable ❌");
   } finally {
     setLoading(false);
   }
@@ -201,10 +213,13 @@ searchBtn.addEventListener("click", searchWeather);
 cityInput.addEventListener("keydown", e => {
   if (e.key === "Enter") searchWeather();
 });
-/* Optional: live search with debounce (uncomment if you want instant results)
+
+/* Uncomment for live search with debounce (optional) */
+/*
 cityInput.addEventListener("input", debounce(() => {
   if (cityInput.value.length > 2) searchWeather();
 }, 300));
 */
+
 
 
