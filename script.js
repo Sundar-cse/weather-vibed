@@ -63,22 +63,49 @@ function getWeatherInfo(code) {
 }
 
 // Change the animated gradient background according to weather code
+/**
+ * Update the gradient background **and** toggle the
+ * weather‑specific CSS classes that show/hide sun/cloud/rain.
+ */
 function changeBackground(code) {
-  const bg = document.querySelector(".background");
-  if (code === 0) {
-    bg.style.background = "linear-gradient(135deg, #56ccf2, #f2c94c)";
-  } else if (code <= 3) {
-    bg.style.background = "linear-gradient(135deg, #78909c, #b0bec5)";
-  } else if (code >= 51 && code <= 67) {
-    bg.style.background = "linear-gradient(135deg, #314755, #26a0da)";
-  } else if (code >= 80 && code <= 82) {
-    bg.style.background = "linear-gradient(135deg, #3a6073, #16222a)";
-  } else if (code >= 95) {
-    bg.style.background = "linear-gradient(135deg, #141e30, #243b55)";
-  } else {
-    bg.style.background = "linear-gradient(135deg, #4facfe, #00f2fe)";
-  }
+    const bg = document.querySelector(".background");
+
+    // ----- 1️⃣ Gradient (unchanged from your original) -----
+    if (code === 0) {
+        bg.style.background = "linear-gradient(135deg, #56ccf2, #f2c94c)";
+    } else if (code <= 3) {
+        bg.style.background = "linear-gradient(135deg, #78909c, #b0bec5)";
+    } else if (code >= 51 && code <= 67) {
+        bg.style.background = "linear-gradient(135deg, #314755, #26a0da)";
+    } else if (code >= 80 && code <= 82) {
+        bg.style.background = "linear-gradient(135deg, #3a6073, #16222a)";
+    } else if (code >= 95) {
+        bg.style.background = "linear-gradient(135deg, #141e30, #243b55)";
+    } else {
+        bg.style.background = "linear-gradient(135deg, #4facfe, #00f2fe)";
+    }
+
+    // ----- 2️⃣ Reset all weather classes -----
+    bg.classList.remove("sunny", "cloudy", "rainy");
+
+    // ----- 3️⃣ Apply the correct class based on the code -----
+    if (code === 0) {                     // clear sky
+        bg.classList.add("sunny");
+    } else if (code >= 1 && code <= 3) {  // partly cloudy / cloudy
+        bg.classList.add("cloudy");
+    } else if (code >= 51 && code <= 67) { // rain
+        bg.classList.add("rainy");
+    } else if (code >= 80 && code <= 82) { // rain showers
+        bg.classList.add("rainy");
+    } else if (code >= 95) {              // thunderstorm (still rain‑like)
+        bg.classList.add("rainy");
+    } else if (code >= 45 && code <= 48) { // fog – treat as cloudy for visuals
+        bg.classList.add("cloudy");
+    } else {
+        // fallback – show nothing special (just the gradient)
+    }
 }
+
 
 // Render the 7‑day forecast cards
 function showForecast(daily) {
