@@ -1,38 +1,512 @@
-/* -------------------------------------------------
-   Hide every weather‑specific element by default.
-   We'll turn the right ones on with a class on .background
-   ------------------------------------------------- */
+/* ------------
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    min-height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    overflow-x: hidden;
+    color: #263238;
+}
+
+/* Animated background */
+
+.background {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+
+    background: linear-gradient(
+        135deg,
+        #56ccf2,
+        #f2c94c
+    );
+
+    background-size: 200% 200%;
+
+    animation: gradientMove 12s ease infinite;
+
+    transition: background 0.8s ease;
+
+    overflow: hidden;
+}
+
+/* Main container */
+
+.container {
+    width: min(900px, 92%);
+    margin: 0 auto;
+    padding: 45px 0 60px;
+    text-align: center;
+}
+
+/* Heading */
+
+h1 {
+    margin: 0;
+    font-size: clamp(2.3rem, 7vw, 4rem);
+}
+
+.subtitle {
+    margin: 5px 0 25px;
+    font-size: 1.25rem;
+}
+
+/* Search */
+
+.search-box {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+#cityInput {
+    width: min(430px, 70vw);
+
+    padding: 13px 17px;
+
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    border-radius: 25px;
+
+    outline: none;
+
+    font: inherit;
+    font-size: 1.05rem;
+
+    background: rgba(255, 255, 255, 0.85);
+}
+
+#searchBtn {
+    border: 0;
+    border-radius: 25px;
+
+    padding: 12px 22px;
+
+    font: inherit;
+    font-size: 1.05rem;
+
+    cursor: pointer;
+
+    background: white;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+#searchBtn:hover:not(:disabled) {
+    transform: translateY(-2px) scale(1.03);
+
+    box-shadow:
+        0 6px 18px rgba(0, 0, 0, 0.15);
+}
+
+#searchBtn:disabled {
+    cursor: wait;
+    opacity: 0.75;
+}
+
+/* Weather card */
+
+.weather-card {
+    padding: 28px;
+
+    border-radius: 28px;
+
+    background: rgba(255, 255, 255, 0.78);
+
+    box-shadow:
+        0 15px 40px rgba(0, 0, 0, 0.16);
+
+    backdrop-filter: blur(8px);
+}
+
+#cityName {
+    margin: 0;
+    font-size: 2rem;
+}
+
+#weatherIcon {
+    margin: 12px 0 2px;
+    font-size: 4.5rem;
+}
+
+#temperature {
+    margin: 0;
+    font-size: 3.2rem;
+    font-weight: bold;
+}
+
+#description {
+    min-height: 30px;
+
+    margin: 4px 0 20px;
+
+    font-size: 1.3rem;
+}
+
+/* Weather details */
+
+.details {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 12px;
+}
+
+.detail {
+    padding: 14px 8px;
+
+    border-radius: 18px;
+
+    background: rgba(255, 255, 255, 0.55);
+}
+
+.detail span {
+    font-size: 1.5rem;
+}
+
+.detail p {
+    margin: 3px 0;
+    font-size: 0.95rem;
+}
+
+.detail strong {
+    font-size: 1.05rem;
+}
+
+/* Forecast */
+
+.forecast-title {
+    margin: 35px 0 15px;
+
+    font-size: 2rem;
+}
+
+.forecast {
+    display: grid;
+
+    grid-template-columns:
+        repeat(7, minmax(100px, 1fr));
+
+    gap: 10px;
+
+    overflow-x: auto;
+
+    padding-bottom: 8px;
+}
+
+.forecast-card {
+    min-width: 100px;
+
+    padding: 14px 8px;
+
+    border-radius: 18px;
+
+    background: rgba(255, 255, 255, 0.78);
+
+    box-shadow:
+        0 7px 18px rgba(0, 0, 0, 0.1);
+}
+
+.forecast-day {
+    font-weight: bold;
+}
+
+.forecast-icon {
+    font-size: 2rem;
+    margin: 8px 0;
+}
+
+.forecast-temp {
+    font-weight: bold;
+}
+
+.forecast-rain {
+    margin-top: 5px;
+    font-size: 0.8rem;
+}
+
+/* Loading spinner */
+
+.spinner {
+    display: inline-block;
+
+    width: 14px;
+    height: 14px;
+
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+
+    border-radius: 50%;
+
+    vertical-align: -2px;
+
+    animation: spin 0.7s linear infinite;
+}
+
+/* Weather background objects */
+
 .background .sun,
 .background .cloud,
 .background .rain {
-    display: none;               /* start hidden */
+    display: none;
 }
 
-/* -------------------------------------------------
-   Show the appropriate layers when we add a class
-   ------------------------------------------------- */
-.background.sunny   .sun   { display: block; }
-.background.cloudy  .cloud { display: block; }
-.background.rainy   .rain  { display: block; }
+/* Show objects according to weather */
 
-/* Optional: make the sun pulse only when we actually show it */
 .background.sunny .sun {
-    animation: sunPulse 4s ease-in-out infinite;
+    display: block;
 }
 
-/* If you want the clouds to drift only when they’re visible */
+.background.cloudy .cloud {
+    display: block;
+}
+
+.background.rainy .rain {
+    display: block;
+}
+
+/* Sun */
+
+.sun {
+    position: absolute;
+
+    width: 130px;
+    height: 130px;
+
+    right: 9%;
+    top: 9%;
+
+    border-radius: 50%;
+
+    background: rgba(255, 220, 80, 0.8);
+
+    box-shadow:
+        0 0 55px rgba(255, 220, 80, 0.7);
+}
+
+/* Clouds */
+
+.cloud {
+    position: absolute;
+
+    width: 150px;
+    height: 45px;
+
+    border-radius: 40px;
+
+    background: rgba(255, 255, 255, 0.55);
+}
+
+.cloud::before,
+.cloud::after {
+    content: '';
+
+    position: absolute;
+
+    bottom: 0;
+
+    border-radius: 50%;
+
+    background: inherit;
+}
+
+.cloud::before {
+    width: 65px;
+    height: 65px;
+
+    left: 20px;
+}
+
+.cloud::after {
+    width: 80px;
+    height: 80px;
+
+    right: 20px;
+}
+
+.cloud1 {
+    left: 5%;
+    top: 18%;
+}
+
+.cloud2 {
+    right: 12%;
+    top: 55%;
+
+    transform: scale(0.75);
+}
+
+/* Rain */
+
+.rain {
+    position: absolute;
+
+    width: 2px;
+    height: 55px;
+
+    top: -70px;
+
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.rain1 {
+    left: 10%;
+    animation-delay: 0.1s;
+}
+
+.rain2 {
+    left: 22%;
+    animation-delay: 0.35s;
+}
+
+.rain3 {
+    left: 35%;
+    animation-delay: 0.7s;
+}
+
+.rain4 {
+    left: 48%;
+    animation-delay: 0.2s;
+}
+
+.rain5 {
+    left: 61%;
+    animation-delay: 0.55s;
+}
+
+.rain6 {
+    left: 74%;
+    animation-delay: 0.9s;
+}
+
+.rain7 {
+    left: 86%;
+    animation-delay: 0.4s;
+}
+
+.rain8 {
+    left: 93%;
+    animation-delay: 0.75s;
+}
+
+/* Weather animations */
+
+.background.sunny .sun {
+    animation:
+        sunPulse 4s ease-in-out infinite;
+}
+
 .background.cloudy .cloud1,
 .background.cloudy .cloud2 {
-    animation: cloudMove linear infinite;
+    animation:
+        cloudMove 18s linear infinite alternate;
 }
 
-/* Rain only falls when the rainy class is present */
 .background.rainy .rain {
-    animation: rainFall 1s linear infinite;
+    animation:
+        rainFall 1s linear infinite;
 }
 
-/* Keep the existing gradient animation – it stays on .background */
+/* Background animation */
 
+@keyframes gradientMove {
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
 
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+/* Sun animation */
+
+@keyframes sunPulse {
+    50% {
+        transform: scale(1.08);
+        opacity: 0.9;
+    }
+}
+
+/* Cloud animation */
+
+@keyframes cloudMove {
+    from {
+        transform: translateX(-15px);
+    }
+
+    to {
+        transform: translateX(30px);
+    }
+}
+
+/* Rain animation */
+
+@keyframes rainFall {
+    from {
+        transform: translateY(-70px);
+    }
+
+    to {
+        transform: translateY(115vh);
+    }
+}
+
+/* Loading animation */
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Tablet / mobile */
+
+@media (max-width: 700px) {
+
+    .details {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+    .forecast {
+        grid-template-columns:
+            repeat(7, 100px);
+    }
+}
+
+/* Small phones */
+
+@media (max-width: 500px) {
+
+    .search-box {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    #cityInput {
+        width: 100%;
+    }
+
+    #searchBtn {
+        width: 130px;
+    }
+
+    .weather-card {
+        padding: 20px 12px;
+    }
+}
 
 
